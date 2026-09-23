@@ -54,7 +54,7 @@
 
     {% if game.running_total == game.problem.paid %}
         <p class="big ok">🎉 Perfect! Exact count-back!</p>
-        <p>You used {{ game.pieces_used|length }} pieces.</p>
+        <p>You used {{ game.pieces_used|length }} pieces: <strong>{{ summary }}</strong></p>
         <form method="post" action="{{ url_for('next_customer') }}">
             <button type="submit" class="action">Next customer →</button>
         </form>

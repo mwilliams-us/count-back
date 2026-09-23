@@ -15,8 +15,11 @@ game = CountBackGame(1)
 def index():
     if game.problem is None:
         game.start_round()
-    return render_template("index.html", game=game,
-                           denoms=DENOMINATIONS)
+    summary = ""
+    if game.running_total == game.problem.paid:
+        summary = game.finish().summary   # "3 pennies, 1 nickel, ..."
+    return render_template("index.html", game=game, denoms=DENOMINATIONS,
+                           summary=summary)
 
 @app.route("/play", methods=["POST"])
 def play():
