@@ -16,10 +16,13 @@ def index():
     if game.problem is None:
         game.start_round()
     summary = ""
+    change_returned = ""
     if game.running_total == game.problem.paid:
-        summary = game.finish().summary   # "3 pennies, 1 nickel, ..."
+        result = game.finish()
+        summary = result.summary
+        change_returned = (game.running_total - game.problem.total)
     return render_template("index.html", game=game, denoms=DENOMINATIONS,
-                           summary=summary)
+                           summary=summary, change_returned=change_returned)
 
 @app.route("/play", methods=["POST"])
 def play():
