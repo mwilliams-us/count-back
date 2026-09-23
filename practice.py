@@ -27,7 +27,7 @@ DENOMINATIONS = {
 
 # --- Levels: which money she may receive, and typical totals ---------
 LEVELS = [
-    {"name": 1, "coins": ["penny", "nickel", "dime", "quarter"],
+    {"name": 1, "coins": ["penny", "nickel", "dime", "quarter", "dollar"],
      "max_total": Decimal("5")},
     {"name": 2, "coins": ["penny", "nickel", "dime", "quarter",
                            "dollar", "five"],
