@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Count-Back Cash Register</title>
+    <style>
+        body   { font-family: system-ui, sans-serif; margin: 2rem;
+                 background: #faf6ef; color: #222; }
+        .card  { background: white; padding: 1.5rem 2rem; border-radius: 12px;
+                 box-shadow: 0 2px 8px rgba(0,0,0,.08); max-width: 34rem; }
+        h1     { font-size: 1.4rem; }
+        .big   { font-size: 2rem; font-weight: bold; }
+        .money-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+        button.money { font-size: 1.1rem; padding: .8rem 1.2rem;
+                 border: none; border-radius: 10px; cursor: pointer;
+                 transition: transform .05s; }
+        button.money:active { transform: scale(.95); }
+        .coin  { background: #d9b45b; }
+        .bill  { background: #b7d3a8; }
+        .ok    { color: green; font-weight: bold; }
+        .oops  { color: #b33; }
+        .muted { color: #666; }
+        form.inline { display: inline; }
+        select, button.action { font-size: 1rem; padding: .5rem .8rem;
+                 border-radius: 8px; }
+        .feedback { background: #fff8dc; border-left: 4px solid #d9b45b; 
+            padding: .6rem 1rem; border-radius: 6px; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🏪 Count-Back Cash Register</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+            <p class="feedback">{{ msg }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Level picker -->
+    <form method="post" action="{{ url_for('set_level') }}" class="inline">
+        Level:
+        <select name="level" onchange="this.form.submit()">
+            {% for lvl in [1, 2, 3, 4] %}
+            <option value="{{ lvl }}" {% if game.generator.level == lvl %}selected{% endif %}>
+                {{ lvl }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if game.running_total == game.problem.paid %}
+        <p class="big ok">🎉 Perfect! Exact count-back!</p>
+        <p>You used {{ game.pieces_used|length }} pieces.</p>
+        <form method="post" action="{{ url_for('next_customer') }}">
+            <button type="submit" class="action">Next customer →</button>
+        </form>
+    {% else %}
+        <p>Total: <strong>${{ game.problem.total }}</strong> &nbsp;·&nbsp;
+           Paid with: <strong>${{ game.problem.paid }}</strong></p>
+        <p class="big">Running total: ${{ game.running_total }}</p>
+        <p>Count back to reach <strong>${{ game.problem.paid }}</strong>!</p>
+
+        <div class="money-grid">
+        {% for name in game.problem.allowed_denoms %}
+            <form method="post" action="{{ url_for('play') }}" class="inline">
+                <input type="hidden" name="denom" value="{{ name }}">
+                <button type="submit" class="money
+                    {% if denoms[name].value < 1 %}coin{% else %}bill{% endif %}">
+                    {{ denoms[name].name|capitalize }}
+                    <span class="muted">${{ denoms[name].value }}</span>
+                </button>
+            </form>
+        {% endfor %}
+        </div>
+
+        <form method="post" action="{{ url_for('hint') }}" class="inline">
+            <button type="submit" class="action">💡 Hint</button>
+        </form>
+    {% endif %}
+</div>
+</body>
+</html>
