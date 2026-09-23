@@ -44,6 +44,20 @@ def money(d):
     """Format a Decimal nicely."""
     return f"${d.quantize(CENT, ROUND_HALF_UP)}"
 
+PLURALS = {
+    "penny": "pennies", "nickel": "nickels", "dime": "dimes",
+    "quarter": "quarters", "dollar": "dollars", "five": "fives",
+    "ten": "tens", "twenty": "twenties", "fifty": "fifties",
+    "hundred": "hundreds",
+}
+
+def summarize(pieces):
+    """['penny','penny','dime'] -> '2 pennies, 1 dime'"""
+    counts = {}
+    for p in pieces:
+        counts[p] = counts.get(p, 0) + 1
+    return ", ".join(f"{n} {PLURALS[name] if n > 1 else name}"
+                     for name, n in counts.items())
 
 class Register:
     """One round of count-back practice."""
@@ -127,7 +141,7 @@ def main():
             msg, done = reg.step(cmd)
             print(msg)
             if done:
-                print(f"You used {len(reg.used)} pieces: {', '.join(reg.used)}")
+                print(f"You used {len(reg.used)} pieces: {summarize(reg.used)}")
                 print("Great counting! 🎉")
                 break
 
