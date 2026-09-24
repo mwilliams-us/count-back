@@ -21,7 +21,7 @@ def index():
         result = game.finish()
         summary = result.summary
         change_returned = (game.running_total - game.problem.total)
-    return render_template("index.html", game=game, denoms=DENOMINATIONS,
+    return render_template("game_screen.html", game=game, denoms=DENOMINATIONS,
                            summary=summary, change_returned=change_returned)
 
 @app.route("/menu")
