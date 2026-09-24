@@ -87,7 +87,9 @@ def api_play(denom):
 
 @app.route("/api/new", methods=["POST"])
 def api_new():
-    """Deal the next customer."""
+    level = request.args.get("level", type=int)
+    if level:
+        game.generator.level = level
     game.start_round()
     return jsonify({"ok": True})
 

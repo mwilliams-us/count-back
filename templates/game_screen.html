@@ -7,6 +7,10 @@
     <div class="upper-panel">
         <!-- Left: Info & Feedback -->
         <div class="info-panel">
+            <div class="victory hidden" id="victory-banner">
+    <p>🎉 Perfect count-back!</p>
+    <button id="next-customer-btn" class="menu-button">Next Customer →</button>
+</div>
             <div class="transaction-details">
                 <div class="detail-row"><span class="label">Total:</span> <strong>${{ game.problem.total }}</strong></div>
                 <div class="detail-row"><span class="label">Paid:</span> <strong>${{ game.problem.paid }}</strong></div>
@@ -61,6 +65,7 @@
 </div>
 
 <script>
+    let currentLevel = 1
 async function play(denom) {
     const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
     const data = await resp.json();
@@ -85,5 +90,30 @@ function renderState(state) {
 
 document.querySelectorAll(".slot, .tray").forEach(el =>
     el.addEventListener("click", () => play(el.dataset.denom)));
+    async function play(denom) {
+    // Lock the drawer once complete — no post-victory scolding
+    if (document.getElementById("victory-banner").classList.contains("shown")) return;
+
+    const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
+    const data = await resp.json();
+    document.getElementById("feedback-msg").innerHTML = `<p>${data.message}</p>`;
+    renderState(data.state);
+    if (data.state.complete) {
+        document.getElementById("victory-banner").classList.remove("hidden");
+        document.getElementById("victory-banner").classList.add("shown");
+    }
+}
+
+async function newCustomer(level) {
+    await fetch(`/api/new?level=${level ?? currentLevel}`, {method: "POST"});
+    document.getElementById("victory-banner").classList.add("hidden");
+    document.getElementById("victory-banner").classList.remove("shown");
+    const resp = await fetch("/api/state");
+    renderState((await resp.json()));
+    document.getElementById("feedback-msg").innerHTML = "<p>New customer!</p>";
+}
+
+document.getElementById("next-customer-btn")
+    ?.addEventListener("click", () => newCustomer());
 </script>
 {% endblock %}

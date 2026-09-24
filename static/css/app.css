@@ -231,3 +231,6 @@ body { font-family: system-ui, sans-serif; background: #faf6ef; color: #222;
 .piece.five    { background-image: url("../images/five.png"); }
 .piece.ten     { background-image: url("../images/ten.png"); }
 .piece.twenty  { background-image: url("../images/twenty.png"); }
+
+.victory { background: #e6f4ea; border: 1px solid #3aa757;
+           border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
