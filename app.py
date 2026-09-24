@@ -15,14 +15,8 @@ game = CountBackGame(1)
 def index():
     if game.problem is None:
         game.start_round()
-    summary = ""
-    change_returned = ""
-    if game.running_total == game.problem.paid:
-        result = game.finish()
-        summary = result.summary
-        change_returned = (game.running_total - game.problem.total)
-    return render_template("index.html", game=game, denoms=DENOMINATIONS,
-                           summary=summary, change_returned=change_returned)
+    return render_template("game_screen.html", game=game,
+                           denoms=DENOMINATIONS)
 
 @app.route("/menu")
 def main_menu():
