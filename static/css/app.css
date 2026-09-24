@@ -217,3 +217,17 @@ body { font-family: system-ui, sans-serif; background: #faf6ef; color: #222;
 .tray.img.nickel  { background-image: url("../images/nickel.png"); }
 .tray.img.dime   { background-image: url("../images/dime.png"); }
 .tray.img.quarter { background-image: url("../images/quarter.png"); }
+
+.piece {
+    width: 32px; height: 32px;
+    background-size: contain; background-repeat: no-repeat;
+    background-position: center;
+}
+.piece.penny   { background-image: url("../images/penny.png"); }
+.piece.nickel  { background-image: url("../images/nickel.png"); }
+.piece.dime    { background-image: url("../images/dime.png"); }
+.piece.quarter { background-image: url("../images/quarter.png"); }
+.piece.dollar  { background-image: url("../images/one.png"); }
+.piece.five    { background-image: url("../images/five.png"); }
+.piece.ten     { background-image: url("../images/ten.png"); }
+.piece.twenty  { background-image: url("../images/twenty.png"); }

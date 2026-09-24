@@ -1,7 +1,6 @@
 """Flask adapter: exposes the count-back game as a clickable web app."""
 
-from flask import Flask, render_template, request, redirect, url_for, flash
-
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from cashback.game import CountBackGame
 from cashback.models import DENOMINATIONS
 
@@ -59,6 +58,38 @@ def set_level():
     game.generator.level = level
     game.start_round()
     return redirect(url_for("index"))
+
+@app.route("/api/state")
+def api_state():
+    """Everything the screen needs to draw current state."""
+    return jsonify({
+        "total": str(game.problem.total),
+        "paid": str(game.problem.paid),
+        "remaining": str(game.remaining),
+        "running": str(game.running_total),
+        "pieces": game.pieces_used,
+        "complete": game.running_total == game.problem.paid,
+    })
+
+@app.route("/api/play/<denom>", methods=["POST"])
+def api_play(denom):
+    """Apply one denomination; return the outcome plus fresh state."""
+    outcome = game.apply(denom)
+    state = {
+        "total": str(game.problem.total),
+        "paid": str(game.problem.paid),
+        "remaining": str(game.remaining),
+        "running": str(game.running_total),
+        "pieces": game.pieces_used,
+        "complete": game.running_total == game.problem.paid,
+    }
+    return jsonify({"message": outcome.message, "state": state})
+
+@app.route("/api/new", methods=["POST"])
+def api_new():
+    """Deal the next customer."""
+    game.start_round()
+    return jsonify({"ok": True})
 
 if __name__ == "__main__":
     app.run(debug=True)

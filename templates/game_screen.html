@@ -10,9 +10,8 @@
             <div class="transaction-details">
                 <div class="detail-row"><span class="label">Total:</span> <strong>${{ game.problem.total }}</strong></div>
                 <div class="detail-row"><span class="label">Paid:</span> <strong>${{ game.problem.paid }}</strong></div>
-                <div class="detail-row"><span class="label">Change Due:</span> <strong>${{ game.remaining }}</strong></div>
+                <div class="detail-row"><span class="label">Change Due:</span> <strong>$<span id="change-due-val">{{ game.remaining }}</span></strong></div>            
             </div>
-            
             <div class="feedback-area" id="feedback-msg">
                 <!-- Messages injected here by JS or Flash -->
                 {% with messages = get_flashed_messages() %}
@@ -62,13 +61,29 @@
 </div>
 
 <script>
-    // Placeholder for logic: currently just logs clicks
-    document.querySelectorAll('.slot, .tray').forEach(el => {
-        el.addEventListener('click', () => {
-            const denom = el.dataset.denom;
-            console.log("Tapped:", denom);
-            // TODO: POST to /play endpoint
-        });
-    });
+async function play(denom) {
+    const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
+    const data = await resp.json();
+    document.getElementById("feedback-msg").innerHTML = `<p>${data.message}</p>`;
+    renderState(data.state);
+}
+
+function renderState(state) {
+    document.getElementById("change-due-val").textContent = state.remaining;
+    document.getElementById("pile-total-val").textContent =
+        (parseFloat(state.running) - parseFloat(state.total)).toFixed(2);
+
+    // Rebuild the change pile from pieces
+    const pile = document.getElementById("pile-content");
+    pile.innerHTML = "";
+    for (const name of state.pieces) {
+        const piece = document.createElement("div");
+        piece.className = `piece ${name}`;
+        pile.appendChild(piece);
+    }
+}
+
+document.querySelectorAll(".slot, .tray").forEach(el =>
+    el.addEventListener("click", () => play(el.dataset.denom)));
 </script>
 {% endblock %}
