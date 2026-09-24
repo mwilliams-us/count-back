@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{% block title %}Main Menu — Count-Back{% endblock %}
+
+{% block content %}
+<main class="menu-screen">
+    <h1 class="menu-title">💰 Count-Back Cash Register</h1>
+    <button class="menu-button" onclick="location.href='/game?mode=simulation'">
+        🎲 Simulation
+    </button>
+    <button class="menu-button" onclick="location.href='/game?mode=learning'">
+        🎓 Learning
+    </button>
+    <button class="menu-button secondary" onclick="location.href='/'">
+        ↩ Back to Classic
+    </button>
+</main>
+{% endblock %}

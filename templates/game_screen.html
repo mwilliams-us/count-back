@@ -1,0 +1,72 @@
+{% extends "_base.html" %}
+{% block title %}Cash Register{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <!-- Upper Region: Split Panel -->
+    <div class="upper-panel">
+        <!-- Left: Info & Feedback -->
+        <div class="info-panel">
+            <div class="transaction-details">
+                <div class="detail-row"><span class="label">Total:</span> <strong>${{ game.problem.total }}</strong></div>
+                <div class="detail-row"><span class="label">Paid:</span> <strong>${{ game.problem.paid }}</strong></div>
+                <div class="detail-row"><span class="label">Change Due:</span> <strong>${{ game.remaining }}</strong></div>
+            </div>
+            
+            <div class="feedback-area" id="feedback-msg">
+                <!-- Messages injected here by JS or Flash -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Right: Change Pile -->
+        <div class="change-pile" id="change-pile">
+            <div class="pile-header">Your Change</div>
+            <div class="pile-content" id="pile-content">
+                <!-- Coins/Bills fly in here -->
+            </div>
+            <div class="pile-total">Total: $<span id="pile-total-val">0.00</span></div>
+        </div>
+    </div>
+
+    <!-- Lower Region: The Cash Drawer -->
+    <div class="cash-drawer">
+        <!-- Bill Slots (Top Row) -->
+        <div class="drawer-row bills">
+            <div class="slot" data-denom="dollar">$1</div>
+            <div class="slot" data-denom="five">$5</div>
+            <div class="slot" data-denom="ten">$10</div>
+            <div class="slot" data-denom="twenty">$20</div>
+        </div>
+        
+        <!-- Coin Trays (Bottom Row) -->
+        <div class="drawer-row coins">
+            <div class="tray" data-denom="penny">Penny</div>
+            <div class="tray" data-denom="nickel">Nickel</div>
+            <div class="tray" data-denom="dime">Dime</div>
+            <div class="tray" data-denom="quarter">Quarter</div>
+        </div>
+        
+        <!-- Hidden High Bills (Simulated via button for now) -->
+        <div class="high-bills-area hidden" id="high-bills">
+            <button class="high-bill-btn" data-denom="fifty">$50</button>
+            <button class="high-bill-btn" data-denom="hundred">$100</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Placeholder for logic: currently just logs clicks
+    document.querySelectorAll('.slot, .tray').forEach(el => {
+        el.addEventListener('click', () => {
+            const denom = el.dataset.denom;
+            console.log("Tapped:", denom);
+            // TODO: POST to /play endpoint
+        });
+    });
+</script>
+{% endblock %}

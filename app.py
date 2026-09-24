@@ -24,6 +24,17 @@ def index():
     return render_template("index.html", game=game, denoms=DENOMINATIONS,
                            summary=summary, change_returned=change_returned)
 
+@app.route("/menu")
+def main_menu():
+    return render_template("main_menu.html")
+
+@app.route("/game")
+def game_screen():
+    # Ensure we have a problem
+    if game.problem is None:
+        game.start_round()
+    return render_template("game_screen.html", game=game, denoms=DENOMINATIONS)
+
 @app.route("/play", methods=["POST"])
 def play():
     denom = request.form.get("denom", "")
@@ -50,3 +61,5 @@ def set_level():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+    
