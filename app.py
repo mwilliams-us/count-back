@@ -11,12 +11,19 @@ app.secret_key = "countback-dev"   # needed for flash messages; change in produc
 # ONE game object per process (fine for a single player on one machine)
 game = CountBackGame(1)
 
+import os
+
 @app.route("/")
 def index():
     if game.problem is None:
         game.start_round()
+
+    def has_img(name):
+        return os.path.exists(os.path.join(app.static_folder,
+                                           "images", f"{name}.png"))
+
     return render_template("game_screen.html", game=game,
-                           denoms=DENOMINATIONS)
+                           denoms=DENOMINATIONS, has_img=has_img)
 
 @app.route("/menu")
 def main_menu():

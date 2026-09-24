@@ -37,18 +37,20 @@
     <div class="cash-drawer">
         <!-- Bill Slots (Top Row) -->
         <div class="drawer-row bills">
-            <div class="slot" data-denom="dollar">$1</div>
-            <div class="slot" data-denom="five">$5</div>
-            <div class="slot" data-denom="ten">$10</div>
-            <div class="slot" data-denom="twenty">$20</div>
+            {% for name, img, label in [('dollar','one','$1'), ('five','five','$5'),
+                                          ('ten','ten','$10'), ('twenty','twenty','$20')] %}
+        <div class="slot {% if has_img(img) %}img {{ img }}{% endif %}"
+                 data-denom="{{ name }}">{{ label }}</div>
+            {% endfor %}
         </div>
-        
+
         <!-- Coin Trays (Bottom Row) -->
         <div class="drawer-row coins">
-            <div class="tray" data-denom="penny">Penny</div>
-            <div class="tray" data-denom="nickel">Nickel</div>
-            <div class="tray" data-denom="dime">Dime</div>
-            <div class="tray" data-denom="quarter">Quarter</div>
+            {% for name, label in [('penny','Penny'), ('nickel','Nickel'),
+                                    ('dime','Dime'), ('quarter','Quarter')] %}
+            <div class="tray {% if has_img(name) %}img {{ name }}{% endif %}"
+                 data-denom="{{ name }}">{{ label }}</div>
+            {% endfor %}
         </div>
         
         <!-- Hidden High Bills (Simulated via button for now) -->
