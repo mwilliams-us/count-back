@@ -12,9 +12,9 @@
     <button id="next-customer-btn" class="menu-button">Next Customer →</button>
 </div>
             <div class="transaction-details">
-                <div class="detail-row"><span class="label">Total:</span> <strong>${{ game.problem.total }}</strong></div>
-                <div class="detail-row"><span class="label">Paid:</span> <strong>${{ game.problem.paid }}</strong></div>
-                <div class="detail-row"><span class="label">Change Due:</span> <strong>$<span id="change-due-val">{{ game.remaining }}</span></strong></div>            
+                <div class="detail-row"><span class="label">Total:</span> <strong>$<span id="total-val">{{ game.problem.total }}</span></strong></div>
+                <div class="detail-row"><span class="label">Paid:</span> <strong><span id="paid-val">${{ game.problem.paid }}</span></strong></div>
+                <!-- <div class="detail-row"><span class="label">Change Due:</span> <strong>$<span id="change-due-val">{{ game.remaining }}</span></strong></div>             -->
             </div>
             <div class="feedback-area" id="feedback-msg">
                 <!-- Messages injected here by JS or Flash -->
@@ -66,16 +66,10 @@
 
 <script>
     let currentLevel = 1
-async function play(denom) {
-    const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
-    const data = await resp.json();
-    document.getElementById("feedback-msg").innerHTML = `<p>${data.message}</p>`;
-    renderState(data.state);
-}
-
 function renderState(state) {
-    document.getElementById("change-due-val").textContent = state.remaining;
-    document.getElementById("pile-total-val").textContent =
+        document.getElementById("total-val").textContent = state.total;
+        document.getElementById("paid-val").textContent = state.paid;
+        document.getElementById("pile-total-val").textContent =
         (parseFloat(state.running) - parseFloat(state.total)).toFixed(2);
 
     // Rebuild the change pile from pieces
