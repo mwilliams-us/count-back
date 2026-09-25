@@ -12,7 +12,7 @@
             </div>
             <div class="transaction-details">
                 <div class="detail-row"><span class="label">Total:</span> <strong>$<span id="total-val">{{ game.problem.total }}</span></strong></div>
-                <div class="detail-row"><span class="label">Paid:</span> <strong>$<span id="paid-val">${{ game.problem.paid }}</span></strong></div>
+                <div class="detail-row"><span class="label">Paid:</span> <strong>$<span id="paid-val">{{ game.problem.paid }}</span></strong></div>
                 <div class="detail-row">
                     <span class="label">Level:</span>
                     <select id="level-select">
@@ -26,6 +26,7 @@
             <div class="feedback-area" id="feedback-msg"></div>
         </div>
 
+        <!-- Right: Change Pile -->
         <div class="change-pile" id="change-pile">
             <div class="pile-header">Your Change</div>
             <div class="pile-content" id="pile-content"></div>
@@ -34,7 +35,8 @@
     </div>
 
     <!-- Lower Region: The Cash Drawer -->
-    <div class="cash-drawer">
+    <div class="cash-drawer" id="cash-drawer">
+        <!-- Normal view: slots & trays -->
         <div class="drawer-row bills">
             {% for name, img, label in [('dollar','one','$1'), ('five','five','$5'),
                                           ('ten','ten','$10'), ('twenty','twenty','$20')] %}
@@ -49,10 +51,14 @@
                  data-denom="{{ name }}">{{ label }}</div>
             {% endfor %}
         </div>
-        <div class="high-bills-area hidden" id="high-bills">
-            <button class="high-bill-btn" data-denom="fifty">$50</button>
-            <button class="high-bill-btn" data-denom="hundred">$100</button>
+
+        <!-- Insert-open view: the stash underneath -->
+        <div class="big-bill-stash" id="big-bill-stash">
+            <button class="big-bill" data-denom="fifty">$50</button>
+            <button class="big-bill" data-denom="hundred">$100</button>
         </div>
+
+        <button class="insert-grip" id="insert-grip">⤒</button>
     </div>
 </div>
 
@@ -80,14 +86,34 @@ function renderState(state) {
     }
 }
 
-// Teaching is tied to the hint toggle: feedback messages only
-// display when hints are ON. With hints OFF, wrong picks in
-// Learning mode are silently bounced (hard mode).
+// Teaching is tied to the hint toggle: messages only display when
+// hints are ON. Hints OFF = hard mode: wrong picks silently bounce.
 function setFeedback(message) {
     if ($("#hint-switch").checked && message) {
         $("#feedback-msg").innerHTML = `<p>${message}</p>`;
     }
 }
+
+// ---------- insert toggle: big-bill stash ------------------------
+const drawer = $("#cash-drawer");
+const grip = $("#insert-grip");
+
+function closeInsert() {
+    drawer.classList.remove("insert-open");
+    grip.textContent = "⤒";
+}
+
+grip?.addEventListener("click", () => {
+    const opening = !drawer.classList.contains("insert-open");
+    drawer.classList.toggle("insert-open", opening);
+    grip.textContent = opening ? "⤓" : "⤒";
+});
+
+document.querySelectorAll(".big-bill").forEach(chip =>
+    chip.addEventListener("click", () => {
+        play(chip.dataset.denom);
+        closeInsert();               // insert drops back after taking a bill
+    }));
 
 // ---------- drawer play ------------------------------------------
 document.querySelectorAll(".slot, .tray").forEach(el =>
@@ -115,6 +141,7 @@ async function respawn({mode, level} = {}) {
     const data = await resp.json();
     victoryShown = false;
     $("#victory-banner").classList.add("hidden");
+    closeInsert();                   // stash hidden on fresh transaction
     renderState(data.state);
     if ($("#hint-switch").checked) {
         $("#feedback-msg").innerHTML = "<p>New customer!</p>";
@@ -160,13 +187,6 @@ if (hintSwitch) {
         localStorage.setItem(`hint-${currentMode}-flipped`, "1");
         localStorage.setItem(`hint-${currentMode}`,
                              hintSwitch.checked ? "on" : "off");
-        // Flipping hints ON mid-round: catch the player up immediately
-        if (hintSwitch.checked) fetch("/api/state")
-            .then(r => r.json())
-            .then(s => { if (!s.complete && s.remaining > 0) {
-                fetch(`/api/hint`, {method: "POST"})
-                    .then(r => r.json());
-            }});
     });
 }
 
