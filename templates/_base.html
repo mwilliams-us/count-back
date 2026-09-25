@@ -5,27 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Count-Back{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <style>
+        /* Navbar controls beyond app.css */
+        .mode-toggle { display: flex; border: 1px solid #4a4a55;
+                       border-radius: 999px; overflow: hidden; }
+        .mode-toggle button { background: none; border: none; color: #aaa;
+                              padding: .25rem .9rem; font-size: .8rem;
+                              cursor: pointer; }
+        .mode-toggle button.active { background: #6d4aff; color: #fff; }
+        .reset-btn { background: none; border: 1px solid #4a4a55; color: #fff;
+                     border-radius: 999px; padding: .25rem .9rem;
+                     font-size: .8rem; cursor: pointer; }
+        .reset-btn:active { background: #4a4a55; }
+        .spacer { flex: 1; }
+    </style>
 </head>
 <body>
-    <!-- Nav strip -->
+    <!-- Nav strip: Sim/Learn toggle · hint switch · reset -->
     <nav class="navbar">
-        <button class="nav-btn" id="menu-btn" aria-label="Menu">☰</button>
-        <span class="mode-badge" id="mode-badge">{{ mode | default('') }}</span>
+        <div class="mode-toggle" id="mode-toggle">
+            <button data-mode="simulation" id="btn-sim">🎲 Sim</button>
+            <button data-mode="learning" id="btn-learn">🎓 Learn</button>
+        </div>
+        <div class="spacer"></div>
         <label class="hint-toggle">
             💡 <input type="checkbox" id="hint-switch">
         </label>
+        <button class="reset-btn" id="reset-btn">↺ Reset</button>
     </nav>
-
-    <!-- Hamburger slide-out overlay -->
-    <div class="overlay hidden" id="menu-overlay">
-        <div class="drawer-menu">
-            <div class="menu-section">Mode</div>
-            <button class="menu-item" data-mode="simulation">🎲 Simulation</button>
-            <button class="menu-item" data-mode="learning">🎓 Learning</button>
-            <div class="menu-separator"></div>
-            <button class="menu-item" id="menu-home">🏠 Main Menu</button>
-        </div>
-    </div>
 
     {% block content %}{% endblock %}
 

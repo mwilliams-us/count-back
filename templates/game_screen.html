@@ -5,49 +5,43 @@
 <div class="game-container">
     <!-- Upper Region: Split Panel -->
     <div class="upper-panel">
-        <!-- Left: Info & Feedback -->
         <div class="info-panel">
             <div class="victory hidden" id="victory-banner">
-    <p>🎉 Perfect count-back!</p>
-    <button id="next-customer-btn" class="menu-button">Next Customer →</button>
-</div>
+                <p>🎉 Perfect count-back!</p>
+                <button id="next-customer-btn" class="menu-button">Next Customer →</button>
+            </div>
             <div class="transaction-details">
                 <div class="detail-row"><span class="label">Total:</span> <strong>$<span id="total-val">{{ game.problem.total }}</span></strong></div>
-                <div class="detail-row"><span class="label">Paid:</span> <strong><span id="paid-val">${{ game.problem.paid }}</span></strong></div>
-                <!-- <div class="detail-row"><span class="label">Change Due:</span> <strong>$<span id="change-due-val">{{ game.remaining }}</span></strong></div>             -->
+                <div class="detail-row"><span class="label">Paid:</span> <strong>$<span id="paid-val">${{ game.problem.paid }}</span></strong></div>
+                <div class="detail-row">
+                    <span class="label">Level:</span>
+                    <select id="level-select">
+                        <option value="1" {% if game.generator.level == 1 %}selected{% endif %}>1 — Coins &amp; $1s</option>
+                        <option value="2" {% if game.generator.level == 2 %}selected{% endif %}>2 — + $5s</option>
+                        <option value="3" {% if game.generator.level == 3 %}selected{% endif %}>3 — + $10/$20</option>
+                        <option value="4" {% if game.generator.level == 4 %}selected{% endif %}>4 — Full Vault</option>
+                    </select>
+                </div>
             </div>
-            <div class="feedback-area" id="feedback-msg">
-                <!-- Messages injected here by JS or Flash -->
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
-                    {% endif %}
-                {% endwith %}
-            </div>
+            <div class="feedback-area" id="feedback-msg"></div>
         </div>
 
-        <!-- Right: Change Pile -->
         <div class="change-pile" id="change-pile">
             <div class="pile-header">Your Change</div>
-            <div class="pile-content" id="pile-content">
-                <!-- Coins/Bills fly in here -->
-            </div>
+            <div class="pile-content" id="pile-content"></div>
             <div class="pile-total">Total: $<span id="pile-total-val">0.00</span></div>
         </div>
     </div>
 
     <!-- Lower Region: The Cash Drawer -->
     <div class="cash-drawer">
-        <!-- Bill Slots (Top Row) -->
         <div class="drawer-row bills">
             {% for name, img, label in [('dollar','one','$1'), ('five','five','$5'),
                                           ('ten','ten','$10'), ('twenty','twenty','$20')] %}
-        <div class="slot {% if has_img(img) %}img {{ img }}{% endif %}"
+            <div class="slot {% if has_img(img) %}img {{ img }}{% endif %}"
                  data-denom="{{ name }}">{{ label }}</div>
             {% endfor %}
         </div>
-
-        <!-- Coin Trays (Bottom Row) -->
         <div class="drawer-row coins">
             {% for name, label in [('penny','Penny'), ('nickel','Nickel'),
                                     ('dime','Dime'), ('quarter','Quarter')] %}
@@ -55,8 +49,6 @@
                  data-denom="{{ name }}">{{ label }}</div>
             {% endfor %}
         </div>
-        
-        <!-- Hidden High Bills (Simulated via button for now) -->
         <div class="high-bills-area hidden" id="high-bills">
             <button class="high-bill-btn" data-denom="fifty">$50</button>
             <button class="high-bill-btn" data-denom="hundred">$100</button>
@@ -65,15 +57,21 @@
 </div>
 
 <script>
-    let currentLevel = 1
-function renderState(state) {
-        document.getElementById("total-val").textContent = state.total;
-        document.getElementById("paid-val").textContent = state.paid;
-        document.getElementById("pile-total-val").textContent =
-        (parseFloat(state.running) - parseFloat(state.total)).toFixed(2);
+// -----------------------------------------------------------------
+// Game screen — all client logic inline, app.js retired.
+// -----------------------------------------------------------------
+let victoryShown = false;
+let currentMode = "{{ mode }}";
 
-    // Rebuild the change pile from pieces
-    const pile = document.getElementById("pile-content");
+// ---------- helpers ----------------------------------------------
+function $(sel) { return document.querySelector(sel); }
+
+function renderState(state) {
+    $("#total-val").textContent = state.total;
+    $("#paid-val").textContent = state.paid;
+    $("#pile-total-val").textContent =
+        (parseFloat(state.running) - parseFloat(state.total)).toFixed(2);
+    const pile = $("#pile-content");
     pile.innerHTML = "";
     for (const name of state.pieces) {
         const piece = document.createElement("div");
@@ -82,32 +80,97 @@ function renderState(state) {
     }
 }
 
-document.querySelectorAll(".slot, .tray").forEach(el =>
-    el.addEventListener("click", () => play(el.dataset.denom)));
-    async function play(denom) {
-    // Lock the drawer once complete — no post-victory scolding
-    if (document.getElementById("victory-banner").classList.contains("shown")) return;
-
-    const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
-    const data = await resp.json();
-    document.getElementById("feedback-msg").innerHTML = `<p>${data.message}</p>`;
-    renderState(data.state);
-    if (data.state.complete) {
-        document.getElementById("victory-banner").classList.remove("hidden");
-        document.getElementById("victory-banner").classList.add("shown");
+// Teaching is tied to the hint toggle: feedback messages only
+// display when hints are ON. With hints OFF, wrong picks in
+// Learning mode are silently bounced (hard mode).
+function setFeedback(message) {
+    if ($("#hint-switch").checked && message) {
+        $("#feedback-msg").innerHTML = `<p>${message}</p>`;
     }
 }
 
-async function newCustomer(level) {
-    await fetch(`/api/new?level=${level ?? currentLevel}`, {method: "POST"});
-    document.getElementById("victory-banner").classList.add("hidden");
-    document.getElementById("victory-banner").classList.remove("shown");
-    const resp = await fetch("/api/state");
-    renderState((await resp.json()));
-    document.getElementById("feedback-msg").innerHTML = "<p>New customer!</p>";
+// ---------- drawer play ------------------------------------------
+document.querySelectorAll(".slot, .tray").forEach(el =>
+    el.addEventListener("click", () => play(el.dataset.denom)));
+
+async function play(denom) {
+    if (victoryShown) return;
+    const resp = await fetch(`/api/play/${denom}`, {method: "POST"});
+    const data = await resp.json();
+    renderState(data.state);
+    if (data.state.complete) {
+        victoryShown = true;
+        $("#victory-banner").classList.remove("hidden");
+    } else {
+        setFeedback(data.message);
+    }
 }
 
-document.getElementById("next-customer-btn")
-    ?.addEventListener("click", () => newCustomer());
+// ---------- respawn (mode / level / reset / new customer) --------
+async function respawn({mode, level} = {}) {
+    const params = new URLSearchParams();
+    if (mode) params.set("mode", mode);
+    if (level) params.set("level", level);
+    const resp = await fetch(`/api/new?${params}`, {method: "POST"});
+    const data = await resp.json();
+    victoryShown = false;
+    $("#victory-banner").classList.add("hidden");
+    renderState(data.state);
+    if ($("#hint-switch").checked) {
+        $("#feedback-msg").innerHTML = "<p>New customer!</p>";
+    }
+}
+
+$("#next-customer-btn")?.addEventListener("click", () => respawn());
+$("#reset-btn")?.addEventListener("click", () =>
+    confirm("Reset the current transaction?")
+        ? respawn() : null);
+
+// ---------- level select ------------------------------------------
+$("#level-select")?.addEventListener("change", (e) =>
+    respawn({level: e.target.value}));
+
+// ---------- mode toggle (Sim <-> Learn) --------------------------
+function setModeUI(mode) {
+    currentMode = mode;
+    $("#btn-sim").classList.toggle("active", mode === "simulation");
+    $("#btn-learn").classList.toggle("active", mode === "learning");
+}
+
+document.querySelectorAll("#mode-toggle button").forEach(btn =>
+    btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        if (mode === currentMode) return;
+        if (!confirm("Switch modes? Current transaction will be abandoned.")) return;
+        setModeUI(mode);
+        respawn({mode});
+    }));
+
+setModeUI(currentMode);
+
+// ---------- hint toggle (sticky per mode) ------------------------
+const hintSwitch = $("#hint-switch");
+if (hintSwitch) {
+    if (!localStorage.getItem(`hint-${currentMode}-flipped`)) {
+        hintSwitch.checked = (currentMode === "learning");
+    } else {
+        hintSwitch.checked = localStorage.getItem(`hint-${currentMode}`) === "on";
+    }
+    hintSwitch.addEventListener("change", () => {
+        localStorage.setItem(`hint-${currentMode}-flipped`, "1");
+        localStorage.setItem(`hint-${currentMode}`,
+                             hintSwitch.checked ? "on" : "off");
+        // Flipping hints ON mid-round: catch the player up immediately
+        if (hintSwitch.checked) fetch("/api/state")
+            .then(r => r.json())
+            .then(s => { if (!s.complete && s.remaining > 0) {
+                fetch(`/api/hint`, {method: "POST"})
+                    .then(r => r.json());
+            }});
+    });
+}
+
+// Render the server-provided state on load
+fetch("/api/state").then(r => r.json()).then(renderState);
 </script>
 {% endblock %}
